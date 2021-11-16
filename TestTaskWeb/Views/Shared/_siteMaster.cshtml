@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Robot</title>
+    <link href="../../Content/Site.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div class="page">
+        <div id="header">
+            <div id="title">
+                <h1>Robot</h1>
+            </div>
+        </div>
+
+        <ul id="menu">
+            <li> @Html.ActionLink("Home", "Index", "Index")</li>
+        </ul>
+        <div id="main">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+            @RenderBody()
+            <div id="footer">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
