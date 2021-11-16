@@ -25,53 +25,86 @@ namespace TestTaskWeb.Controllers
             m_navigationService = navigationService;
         }
 
-      
+
 
         public ActionResult Index()
         {
             return View();
         }
-      
+
         /// <summary>
         /// Saves the size of the plateau.
         /// </summary>
         /// <param name="heightwidth"></param>
         /// <returns></returns>
-        
-        public ActionResult SubmitPlateau(string heightwidth)
-        {            
-            string[] plateau = heightwidth.Split(' ');
-            int width = Convert.ToInt32(plateau[0]);
-            int height = Convert.ToInt32(plateau[1]);
 
-            TempData["Plateau"] = new Plateau(width, height);
-            ViewData.Model = new List<RobotModel>();
-            return View();
+        public ActionResult SubmitPlateau(string heightwidth)
+        {
+            string[] plateau = heightwidth.Split(' ');
+
+            if ((plateau?.Length ?? 0) >= 2)
+            {
+                try
+                {
+                    int width = Convert.ToInt32(plateau[0]);
+                    int height = Convert.ToInt32(plateau[1]);
+
+                    TempData["Plateau"] = new Plateau(width, height);
+                    ViewData.Model = new List<RobotModel>();
+
+                    return View();
+                }
+                catch (Exception)
+                {
+                    return View("Index");
+                }
+            }
+            else
+            {
+                return View("Index");
+            }
         }
 
         public ActionResult AddRobot(string xydirection, string movements)
         {
             string[] splitDirection = xydirection.Split(' ');
-            int x = Convert.ToInt32(splitDirection[0]);
-            int y = Convert.ToInt32(splitDirection[1]);
-            string direction = splitDirection[2];
-
             var robots = new List<RobotModel>();
-            if (TempData["Robots"] != null)
+
+            if ((splitDirection?.Length ?? 0) >= 3)
             {
-                robots = TempData["Robots"] as List<RobotModel>;
+                try
+                {
+                    int x = Convert.ToInt32(splitDirection[0]);
+                    int y = Convert.ToInt32(splitDirection[1]);
+                    string direction = splitDirection[2];
+
+                    if (TempData["Robots"] != null)
+                    {
+                        robots = TempData["Robots"] as List<RobotModel>;
+                    }
+
+                    var position = new Position { X = x, Y = y, Direction = DirectionParser.Parse(direction) };
+                    var robot = new Robot(position);
+                    if (robots != null)
+                    {
+                        robots.Add(new RobotModel { Movements = movements, Robot = robot });
+
+                        TempData["Robots"] = ViewData.Model = robots;
+                    }
+
+                    return new ViewResult { ViewName = "SubmitPlateau", ViewData = ViewData };
+                }
+                catch (Exception)
+                {
+                    TempData["Robots"] = ViewData.Model = robots;
+                    return new ViewResult { ViewName = "SubmitPlateau", ViewData = ViewData };
+                }
             }
-
-            var position = new Position { X = x, Y = y, Direction = DirectionParser.Parse(direction) };
-            var robot = new Robot(position);
-            if (robots != null)
+            else
             {
-                robots.Add(new RobotModel { Movements = movements, Robot = robot });
-
                 TempData["Robots"] = ViewData.Model = robots;
+                return new ViewResult { ViewName = "SubmitPlateau", ViewData = ViewData };
             }
-
-            return new ViewResult { ViewName = "SubmitPlateau", ViewData = ViewData };
         }
 
         /// <summary>
@@ -84,10 +117,10 @@ namespace TestTaskWeb.Controllers
             NavigationService nvgService = new NavigationService();
             PositionAvoid.positionsToAvoid = new List<Constant>();
             foreach (RobotModel model in (List<RobotModel>)TempData["Robots"])
-            {               
+            {
                 results.Add(nvgService.ExploreTerrain((Plateau)TempData["Plateau"], model.Robot, CommandParser.Parse(model.Movements)));
             }
-       
+
             ViewData.Model = results;
             return View();
         }
